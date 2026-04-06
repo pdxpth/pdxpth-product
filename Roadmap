@@ -1,2 +1,93 @@
 npm create vite@latest . -- --template react
 npm install
+import { useState, useEffect } from "react";
+
+function App() {
+  const [items, setItems] = useState([]);
+  const [form, setForm] = useState({
+    name: "",
+    impact: 3,
+    effort: 3,
+    confidence: 3,
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("roadmap");
+    if (saved) setItems(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("roadmap", JSON.stringify(items));
+  }, [items]);
+
+  const calculateScore = (i) => {
+    return ((i.impact * i.confidence) / i.effort).toFixed(2);
+  };
+
+  const addItem = () => {
+    const newItem = {
+      ...form,
+      id: Date.now(),
+      score: calculateScore(form),
+    };
+
+    const updated = [...items, newItem].sort((a, b) => b.score - a.score);
+    setItems(updated);
+
+    setForm({ name: "", impact: 3, effort: 3, confidence: 3 });
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>📊 Roadmap Prioritizer</h1>
+
+      <div>
+        <input
+          placeholder="Feature name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+
+        <label>Impact</label>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          value={form.impact}
+          onChange={(e) => setForm({ ...form, impact: +e.target.value })}
+        />
+
+        <label>Effort</label>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          value={form.effort}
+          onChange={(e) => setForm({ ...form, effort: +e.target.value })}
+        />
+
+        <label>Confidence</label>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          value={form.confidence}
+          onChange={(e) => setForm({ ...form, confidence: +e.target.value })}
+        />
+
+        <button onClick={addItem}>Add</button>
+      </div>
+
+      <h2>Prioritized Roadmap</h2>
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>
+            <strong>{item.name}</strong> — Score: {item.score}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;

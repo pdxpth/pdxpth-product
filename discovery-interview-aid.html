@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discovery Interview Aid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #151515;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #c8f53a;
+    --accent2: #f53a6e;
+    --text: #e8e8e8;
+    --muted: #666;
+    --user-bubble: #1a2a00;
+    --ai-bubble: #1a1a1a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .header-tag {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* SETUP PANEL */
+  #setup-panel {
+    position: relative;
+    z-index: 5;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 28px 24px;
+    width: 100%;
+  }
+
+  .setup-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+  }
+
+  .setup-title span {
+    color: var(--accent);
+  }
+
+  .setup-sub {
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  .field-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 12px 14px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  textarea { min-height: 80px; }
+
+  select option { background: #1a1a1a; }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .tag {
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 2px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .tag.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200, 245, 58, 0.07);
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 12px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .start-btn:hover { opacity: 0.88; }
+  .start-btn:active { transform: scale(0.99); }
+
+  /* CHAT INTERFACE */
+  #chat-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 5;
+  }
+
+  .interview-header {
+    padding: 20px 28px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .interview-meta {
+    flex: 1;
+  }
+
+  .interview-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  .interview-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .interview-context {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .reset-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+
+  .reset-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .progress-bar-wrap {
+    padding: 14px 28px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 300px;
+    max-height: calc(100vh - 320px);
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-role {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 2px;
+  }
+
+  .msg.ai .msg-role { color: var(--accent); }
+
+  .msg-bubble {
+    padding: 14px 16px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    border: 1px solid transparent;
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--user-bubble);
+    border-color: rgba(200,245,58,0.15);
+    align-self: flex-end;
+    max-width: 85%;
+  }
+
+  .msg.ai .msg-bubble {
+    background: var(--ai-bubble);
+    border-color: var(--border);
+    align-self: flex-start;
+    max-width: 92%;
+  }
+
+  /* SUGGESTIONS */
+  .suggestions {
+    padding: 0 28px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .suggestion-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 5px 11px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-style: italic;
+  }
+
+  .suggestion-chip:hover {
+    color: var(--text);
+    border-color: var(--muted);
+    background: var(--surface);
+  }
+
+  /* INPUT AREA */
+  .input-area {
+    padding: 12px 28px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-area textarea {
+    flex: 1;
+    min-height: 50px;
+    max-height: 140px;
+    resize: none;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .send-btn {
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0 18px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* SUMMARY PANEL */
+  #summary-panel {
+    display: none;
+    position: relative;
+    z-index: 5;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 28px 48px;
+  }
+
+  .summary-header {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+
+  .summary-header span { color: var(--accent); }
+
+  .summary-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .summary-section {
+    margin-bottom: 24px;
+  }
+
+  .summary-section-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .summary-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+
+  .btn-outline:hover { border-color: var(--text); }
+
+  .btn-accent {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    background: var(--accent);
+    border: none;
+    color: #0d0d0d;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: opacity 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-accent:hover { opacity: 0.85; }
+
+  /* LOADING DOT */
+  .typing-indicator {
+    display: flex; gap: 5px; align-items: center; padding: 8px 2px;
+  }
+  .typing-indicator span {
+    width: 6px; height: 6px; background: var(--muted);
+    border-radius: 50%; animation: blink 1.2s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+  /* API KEY NOTICE */
+  .api-notice {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 8px 28px;
+    border-top: 1px solid var(--border);
+  }
+
+  .api-notice a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Discovery Aid
+  </div>
+  <div class="header-tag">PM Toolkit v1.0</div>
+</header>
+
+<!-- SETUP PANEL -->
+<div id="setup-panel">
+  <h1 class="setup-title">Interview<br><span>Discovery Aid</span></h1>
+  <p class="setup-sub">AI-powered interview guide for product managers. Set your context and get adaptive, intelligent follow-up questions in real time.</p>
+
+  <div class="field-group">
+    <label>Interviewee Role / Persona</label>
+    <input type="text" id="persona" placeholder="e.g. Head of Engineering at a mid-size SaaS startup">
+  </div>
+
+  <div class="field-group">
+    <label>Product / Problem Area</label>
+    <input type="text" id="product" placeholder="e.g. Internal developer tooling, incident management">
+  </div>
+
+  <div class="field-group">
+    <label>Interview Goal</label>
+    <div class="tag-row" id="goal-tags">
+      <button class="tag active" data-val="Uncover pain points">Uncover pain points</button>
+      <button class="tag" data-val="Validate a hypothesis">Validate hypothesis</button>
+      <button class="tag" data-val="Explore workflow">Explore workflow</button>
+      <button class="tag" data-val="Understand decision-making">Decision-making</button>
+      <button class="tag" data-val="Map the user journey">User journey</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Anthropic API Key</label>
+    <input type="password" id="api-key" placeholder="sk-ant-...">
+  </div>
+
+  <button class="start-btn" onclick="startInterview()">Begin Interview Session →</button>
+</div>
+
+<!-- CHAT PANEL -->
+<div id="chat-panel">
+  <div class="interview-header">
+    <div class="interview-meta">
+      <div class="interview-label">Active Session</div>
+      <div class="interview-name" id="session-title">—</div>
+      <div class="interview-context" id="session-context">—</div>
+    </div>
+    <button class="reset-btn" onclick="resetToSetup()">↩ New Session</button>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">0 / 8 exchanges</div>
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="suggestions" id="suggestions"></div>
+
+  <div class="input-area">
+    <textarea id="user-input" placeholder="Type the interviewee's response, or your own follow-up…" rows="2" onkeydown="handleKey(event)"></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">Send ↑</button>
+  </div>
+
+  <p class="api-notice">Powered by <a href="https://anthropic.com" target="_blank">Claude</a> · Your API key is never stored</p>
+</div>
+
+<!-- SUMMARY PANEL -->
+<div id="summary-panel">
+  <div class="summary-header">Interview<br><span>Summary</span></div>
+  <div class="summary-sub" id="summary-sub">Session complete</div>
+
+  <div class="summary-section">
+    <div class="summary-section-title">Key Pain Points Identified</div>
+    <div class="summary-content" id="sum-pain"></div>
+  </div>
+
+  <div class="summary-section">
+    <div class="summary-section-title">Insights & Opportunities</div>
+    <div class="summary-content" id="sum-insights"></div>
+  </div>
+
+  <div class="summary-section">
+    <div class="summary-section-title">Recommended Follow-up Questions</div>
+    <div class="summary-content" id="sum-followup"></div>
+  </div>
+
+  <div class="summary-section">
+    <div class="summary-section-title">Raw Transcript</div>
+    <div class="summary-content" id="sum-transcript" style="max-height:220px;overflow-y:auto;font-size:0.72rem;color:var(--muted)"></div>
+  </div>
+
+  <div class="summary-actions">
+    <button class="btn-outline" onclick="copyTranscript()">Copy Transcript</button>
+    <button class="btn-accent" onclick="resetToSetup()">New Interview →</button>
+  </div>
+</div>
+
+<script>
+const MAX_EXCHANGES = 8;
+let apiKey = '';
+let conversationHistory = [];
+let exchangeCount = 0;
+let sessionConfig = {};
+let selectedGoal = 'Uncover pain points';
+
+// Tag selection
+document.querySelectorAll('#goal-tags .tag').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#goal-tags .tag').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    selectedGoal = t.dataset.val;
+  });
+});
+
+function startInterview() {
+  const persona = document.getElementById('persona').value.trim();
+  const product = document.getElementById('product').value.trim();
+  apiKey = document.getElementById('api-key').value.trim();
+
+  if (!persona || !product) { alert('Please fill in the role and product area.'); return; }
+  if (!apiKey) { alert('Please enter your Anthropic API key.'); return; }
+
+  sessionConfig = { persona, product, goal: selectedGoal };
+
+  document.getElementById('session-title').textContent = persona;
+  document.getElementById('session-context').textContent = `${product} · ${selectedGoal}`;
+
+  document.getElementById('setup-panel').style.display = 'none';
+  const cp = document.getElementById('chat-panel');
+  cp.style.display = 'flex';
+
+  conversationHistory = [];
+  exchangeCount = 0;
+  document.getElementById('messages').innerHTML = '';
+
+  updateProgress();
+  kickoffInterview();
+}
+
+function buildSystemPrompt() {
+  return `You are an expert product discovery facilitator helping a product manager conduct a user interview.
+
+Context:
+- Interviewee: ${sessionConfig.persona}
+- Product/Problem Area: ${sessionConfig.product}
+- Session Goal: ${sessionConfig.goal}
+
+Your role is to:
+1. Generate ONE sharp, open-ended interview question at a time
+2. When the PM shares the interviewee's response, acknowledge any key insight briefly (1 sentence), then ask a smart follow-up that digs deeper
+3. Adapt your questions dynamically based on what's been said — don't follow a rigid script
+4. Use techniques like: "Tell me more about...", "What happened last time...", "Walk me through...", "What did you try first..."
+5. After ${MAX_EXCHANGES} exchanges, indicate it's a good stopping point
+
+Keep your responses concise: a brief acknowledgment + the next question. No lengthy preambles.
+Start by asking the first question now.`;
+}
+
+async function kickoffInterview() {
+  showTyping();
+
+  const systemPrompt = buildSystemPrompt();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: 'Please begin the interview with your first question.' }]
+      })
+    });
+
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) { addMessage('ai', `Error: ${data.error.message}`); return; }
+
+    const aiText = data.content[0].text;
+    conversationHistory.push({ role: 'user', content: 'Please begin the interview with your first question.' });
+    conversationHistory.push({ role: 'assistant', content: aiText });
+    addMessage('ai', aiText);
+    showSuggestions();
+  } catch(e) {
+    removeTyping();
+    addMessage('ai', `Connection error: ${e.message}. Check your API key and try again.`);
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  document.getElementById('send-btn').disabled = true;
+  hideSuggestions();
+
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  exchangeCount++;
+  updateProgress();
+
+  if (exchangeCount >= MAX_EXCHANGES) {
+    showTyping();
+    await generateSummary();
+    return;
+  }
+
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: buildSystemPrompt(),
+        messages: conversationHistory
+      })
+    });
+
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) { addMessage('ai', `Error: ${data.error.message}`); return; }
+
+    const aiText = data.content[0].text;
+    conversationHistory.push({ role: 'assistant', content: aiText });
+    addMessage('ai', aiText);
+    showSuggestions();
+  } catch(e) {
+    removeTyping();
+    addMessage('ai', `Error: ${e.message}`);
+  }
+
+  document.getElementById('send-btn').disabled = false;
+}
+
+async function generateSummary() {
+  const summaryPrompt = `Based on the following discovery interview transcript, provide a structured analysis.
+
+Interview Context: ${sessionConfig.persona} | ${sessionConfig.product} | Goal: ${sessionConfig.goal}
+
+Transcript:
+${conversationHistory.filter(m => m.role !== 'user' || m.content !== 'Please begin the interview with your first question.').map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n\n')}
+
+Return your analysis in this exact format with these exact headers:
+
+PAIN_POINTS:
+[List the key pain points surfaced, one per line, starting with •]
+
+INSIGHTS:
+[List key insights and opportunities, one per line, starting with •]
+
+FOLLOWUP:
+[List 3-5 recommended follow-up questions for a deeper session, one per line, starting with •]`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 900,
+        messages: [{ role: 'user', content: summaryPrompt }]
+      })
+    });
+
+    const data = await res.json();
+    removeTyping();
+    document.getElementById('send-btn').disabled = false;
+
+    if (data.error) { addMessage('ai', `Summary error: ${data.error.message}`); return; }
+
+    const raw = data.content[0].text;
+
+    const extract = (key) => {
+      const match = raw.match(new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z_]+:|$)`));
+      return match ? match[1].trim() : '—';
+    };
+
+    document.getElementById('sum-pain').textContent = extract('PAIN_POINTS');
+    document.getElementById('sum-insights').textContent = extract('INSIGHTS');
+    document.getElementById('sum-followup').textContent = extract('FOLLOWUP');
+    document.getElementById('sum-sub').textContent =
+      `${sessionConfig.persona} · ${sessionConfig.product} · ${exchangeCount} exchanges`;
+
+    const transcript = conversationHistory
+      .filter(m => m.content !== 'Please begin the interview with your first question.')
+      .map(m => `[${m.role === 'user' ? 'PM' : 'AI'}] ${m.content}`)
+      .join('\n\n');
+    document.getElementById('sum-transcript').textContent = transcript;
+
+    document.getElementById('chat-panel').style.display = 'none';
+    document.getElementById('summary-panel').style.display = 'block';
+
+  } catch(e) {
+    removeTyping();
+    addMessage('ai', `Summary generation failed: ${e.message}`);
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+// UI helpers
+function addMessage(role, text) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-role">${role === 'ai' ? '◆ AI Interviewer' : '◇ You / Interviewee'}</div>
+    <div class="msg-bubble">${escapeHtml(text)}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-msg';
+  div.innerHTML = `<div class="msg-role">◆ AI Interviewer</div>
+    <div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-msg');
+  if (t) t.remove();
+}
+
+function updateProgress() {
+  const pct = Math.min((exchangeCount / MAX_EXCHANGES) * 100, 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${exchangeCount} / ${MAX_EXCHANGES} exchanges`;
+}
+
+const SUGGESTIONS = [
+  "We actually tried something similar last quarter...",
+  "That's the biggest frustration honestly.",
+  "I'm not sure — it varies by team.",
+  "Yeah, this is a daily headache.",
+  "We usually just work around it.",
+  "I'd have to check with my manager.",
+  "The old process was actually better in some ways.",
+  "That's a great question, I've never thought about it."
+];
+
+function showSuggestions() {
+  const wrap = document.getElementById('suggestions');
+  const picks = SUGGESTIONS.sort(() => Math.random() - 0.5).slice(0, 3);
+  wrap.innerHTML = picks.map(s =>
+    `<button class="suggestion-chip" onclick="useSuggestion(this)">"${s}"</button>`
+  ).join('');
+}
+
+function hideSuggestions() {
+  document.getElementById('suggestions').innerHTML = '';
+}
+
+function useSuggestion(el) {
+  document.getElementById('user-input').value = el.textContent.replace(/"/g, '');
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function resetToSetup() {
+  document.getElementById('chat-panel').style.display = 'none';
+  document.getElementById('summary-panel').style.display = 'none';
+  document.getElementById('setup-panel').style.display = 'block';
+  conversationHistory = [];
+  exchangeCount = 0;
+}
+
+function copyTranscript() {
+  const text = document.getElementById('sum-transcript').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('Transcript copied to clipboard!'));
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>

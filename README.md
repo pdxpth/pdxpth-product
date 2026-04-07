@@ -4,8 +4,8 @@ I’m a technical product manager focused on building data-driven products that 
 
 My work sits at the intersection of product strategy, data platforms, and user experience. I specialize in translating complex business needs into scalable, well-defined solutions, particularly in environments involving data products, analytics, and modern cloud architectures.
 
-**What You’ll See Here
-**Structured approaches to product discovery and prioritization
+**What You’ll See Here**
+Structured approaches to product discovery and prioritization
 Lightweight tools and prototypes that support decision-making
 Examples of how I think about user needs, tradeoffs, and outcomes
 Practical applications of agile and iterative development principles
